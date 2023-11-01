@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: "12050"
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_CONNECTION_TIMEOUT_MS: 20000
+    ports:
+      - "12050:12050"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    ports:
+      - "12060:12060"
+      - "12061:12061"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:12050
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:12061,EXTERNAL://localhost:12060
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CONFLUENT_SUPPORT_METRICS_ENABLE: "false"
+
+  postgres:
+    image: postgres:15.2-alpine
+    ports:
+      - "12070:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: kafka
+      PGDATA: postgres-data
+
+volumes:
+  postgres-data:
